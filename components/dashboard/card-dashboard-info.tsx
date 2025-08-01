@@ -79,8 +79,8 @@ export default function CardDashboardInfo({
 
   return (
     <div className="space-y-3">
-      {/* Description */}
-      <p className="text-sm text-muted-foreground leading-relaxed">
+      {/* Description with line clamping */}
+      <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
         {description}
       </p>
 

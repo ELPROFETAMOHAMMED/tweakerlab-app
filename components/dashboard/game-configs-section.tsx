@@ -2,23 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { transformGameConfigsToContentItems } from "@/lib/transformers/game-config-transformer";
-import { GameConfig } from "@/types/game-config";
 import { ContentItem } from "./categories-carrousel";
 import ContentCarousel from "./categories-carrousel";
 import CardDashboardInfo from "./card-dashboard-info";
+import { GameConfigsSkeletonCarousel } from "./game-configs-skeleton-carousel";
 
 /**
  * Client component for rendering game configurations section
- * Fetches data from API and renders the carousel with loading states
+ * Uses separate skeleton component to maintain clean code separation
  */
 export function GameConfigsSection() {
   const [gameConfigs, setGameConfigs] = useState<ContentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cardsCount, setCardsCount] = useState<number>(8); // Default fallback
 
   useEffect(() => {
+    // Fetch count first for accurate skeleton loading
+    fetchCardsCount();
+    // Then fetch the actual data
     fetchGameConfigs();
   }, []);
+
+  const fetchCardsCount = async () => {
+    try {
+      const response = await fetch('/api/game-configs/count');
+
+      if (response.ok) {
+        const { count } = await response.json();
+        setCardsCount(count || 8); // Use fetched count or fallback to 8
+      }
+    } catch (err) {
+      console.error('Error fetching cards count:', err);
+      // Keep default count of 8 on error
+    }
+  };
 
   const fetchGameConfigs = async () => {
     try {
@@ -42,14 +60,18 @@ export function GameConfigsSection() {
     }
   };
 
+  // Show skeleton while loading
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading game configurations...</p>
-        </div>
-      </div>
+      <GameConfigsSkeletonCarousel
+        count={cardsCount}
+        title="🎮 Popular Games - Configuration Files"
+        showIcon={false}
+        showImage={true}
+        showBadge={true}
+        itemsPerView="1/4"
+        renderCustomContent={true}
+      />
     );
   }
 
@@ -59,7 +81,11 @@ export function GameConfigsSection() {
         <div className="text-center">
           <p className="text-destructive mb-4">{error}</p>
           <button
-            onClick={fetchGameConfigs}
+            onClick={() => {
+              setLoading(true);
+              setError(null);
+              fetchGameConfigs();
+            }}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
           >
             Try Again
@@ -69,6 +95,17 @@ export function GameConfigsSection() {
     );
   }
 
+  if (gameConfigs.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <p className="text-muted-foreground">No game configurations available</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show real carousel with data
   return (
     <ContentCarousel
       items={gameConfigs}

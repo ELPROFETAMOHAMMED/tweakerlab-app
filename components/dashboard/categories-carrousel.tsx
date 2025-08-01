@@ -19,13 +19,13 @@ export interface ContentItem {
 interface ContentCarouselProps {
   items: ContentItem[];
   title?: string;
-  className?: string;
-  itemClassName?: string;
-  showSeparator?: boolean;
   showIcon?: boolean;
   showImage?: boolean;
   showBadge?: boolean;
+  showSeparator?: boolean;
   itemsPerView?: "1/2" | "1/3" | "1/4" | "1/5" | "auto";
+  className?: string;
+  itemClassName?: string;
   onItemClick?: (item: ContentItem) => void;
   renderCustomContent?: (item: ContentItem) => ReactNode;
 }
@@ -33,16 +33,17 @@ interface ContentCarouselProps {
 export default function ContentCarousel({
   items,
   title,
-  className = "",
-  itemClassName = "",
-  showSeparator = true,
-  showIcon = true,
+  showIcon = false,
   showImage = false,
   showBadge = false,
+  showSeparator = true,
   itemsPerView = "1/3",
+  className = "",
+  itemClassName = "",
   onItemClick,
   renderCustomContent
 }: ContentCarouselProps) {
+
   const getBasisClass = () => {
     switch (itemsPerView) {
       case "1/2": return "basis-1/2";
@@ -118,7 +119,7 @@ export default function ContentCarousel({
                   {renderCustomContent ? (
                     renderCustomContent(item)
                   ) : (
-                    <CardDescription className="text-muted-foreground">
+                    <CardDescription className="text-muted-foreground line-clamp-2">
                       {item.description}
                     </CardDescription>
                   )}
