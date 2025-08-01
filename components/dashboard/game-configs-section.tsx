@@ -63,7 +63,7 @@ export function GameConfigsSection() {
     return (
       <GameConfigsSkeletonCarousel
         count={cardsCount}
-        title="🎮 Popular Games - Configuration Files"
+        title="🎮 Game Configurations"
         showIcon={false}
         showImage={true}
         showBadge={true}
@@ -103,7 +103,7 @@ export function GameConfigsSection() {
   return (
     <ContentCarousel
       items={gameConfigs}
-      title="🎮 Popular Games - Configuration Files"
+      title="🎮 Game Configurations"
       showIcon={false}
       showImage={true}
       showBadge={true}

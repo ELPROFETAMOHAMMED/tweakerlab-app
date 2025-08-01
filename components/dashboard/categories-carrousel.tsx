@@ -28,6 +28,7 @@ interface ContentCarouselProps {
   itemClassName?: string;
   onItemClick?: (item: ContentItem) => void;
   renderCustomContent?: (item: ContentItem) => ReactNode;
+  variant?: "default" | "clean";
 }
 
 export default function ContentCarousel({
@@ -41,7 +42,8 @@ export default function ContentCarousel({
   className = "",
   itemClassName = "",
   onItemClick,
-  renderCustomContent
+  renderCustomContent,
+  variant = "default",
 }: ContentCarouselProps) {
 
   const getBasisClass = () => {
@@ -63,8 +65,13 @@ export default function ContentCarousel({
 
   return (
     <div className={className}>
-      {title && (
-        <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      {variant === "default" && title && (
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold mb-1">{title}</h2>
+          <p className="text-muted-foreground text-sm">
+            Optimize your gaming experience with pre-configured settings
+          </p>
+        </div>
       )}
 
       <Carousel>
@@ -74,57 +81,66 @@ export default function ContentCarousel({
               key={item.id}
               className={`${getBasisClass()} ${itemClassName}`}
             >
-              <Card
-                className={`h-full ${onItemClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
-                onClick={() => handleItemClick(item)}
-              >
-                {/* Header con icono/imagen */}
-                <CardHeader className="flex flex-row items-center gap-2">
-                  {(showIcon && item.icon) && (
-                    <>
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full text-primary">
-                        {item.icon}
-                      </div>
-                      {showSeparator && <Separator orientation="vertical" className="h-6" />}
-                    </>
-                  )}
+              {variant === "clean" ? (
+                <div
+                  className={`h-full ${onItemClick ? 'cursor-pointer' : ''}`}
+                  onClick={() => handleItemClick(item)}
+                >
+                  {renderCustomContent ? renderCustomContent(item) : null}
+                </div>
+              ) : (
+                <Card
+                  className={`h-full ${onItemClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''}`}
+                  onClick={() => handleItemClick(item)}
+                >
+                  {/* Header con icono/imagen */}
+                  <CardHeader className="flex flex-row items-center gap-2">
+                    {(showIcon && item.icon) && (
+                      <>
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full text-primary">
+                          {item.icon}
+                        </div>
+                        {showSeparator && <Separator orientation="vertical" className="h-6" />}
+                      </>
+                    )}
 
-                  {(showImage && item.image) && (
-                    <>
-                      <div className="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden">
-                        <img
-                          src={item.image}
-                          alt={item.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      {showSeparator && <Separator orientation="vertical" className="h-6" />}
-                    </>
-                  )}
+                    {(showImage && item.image) && (
+                      <>
+                        <div className="flex items-center justify-center w-10 h-10 rounded-full overflow-hidden">
+                          <img
+                            src={item.image}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        {showSeparator && <Separator orientation="vertical" className="h-6" />}
+                      </>
+                    )}
 
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <CardTitle className="text-lg">{item.title}</CardTitle>
-                      {(showBadge && item.badge) && (
-                        <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
-                          {item.badge}
-                        </span>
-                      )}
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-lg">{item.title}</CardTitle>
+                        {(showBadge && item.badge) && (
+                          <span className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full">
+                            {item.badge}
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
+                  </CardHeader>
 
-                {/* Custom content or default description */}
-                <CardContent>
-                  {renderCustomContent ? (
-                    renderCustomContent(item)
-                  ) : (
-                    <CardDescription className="text-muted-foreground line-clamp-2">
-                      {item.description}
-                    </CardDescription>
-                  )}
-                </CardContent>
-              </Card>
+                  {/* Custom content or default description */}
+                  <CardContent>
+                    {renderCustomContent ? (
+                      renderCustomContent(item)
+                    ) : (
+                      <CardDescription className="text-muted-foreground line-clamp-2">
+                        {item.description}
+                      </CardDescription>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </CarouselItem>
           ))}
 

@@ -1,11 +1,9 @@
 import DashboardHeader from "@/components/dashboard/sections/header";
-import { GameConfigsSection } from "@/components/dashboard/game-configs-section";
-import { GameConfigsLoading } from "@/components/ui/loading-states";
+import DashboardPaginatedContent from "@/components/dashboard/dashboard-paginated-content";
 import { createClient } from "@/lib/supabase/server";
 import { User } from "@/types/auth";
 import { PCInfo } from "@/types/pc-info";
 import { redirect } from "next/navigation";
-import { Suspense } from "react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -48,12 +46,8 @@ export default async function DashboardPage() {
         pcInfo={pcInfo as PCInfo}
       />
 
-      {/* Game Configurations Section - Server-side rendered */}
-      <div className="w-full">
-        <Suspense fallback={<GameConfigsLoading />}>
-          <GameConfigsSection />
-        </Suspense>
-      </div>
+      {/* Paginated Dashboard Content */}
+      <DashboardPaginatedContent />
     </div>
   );
 }

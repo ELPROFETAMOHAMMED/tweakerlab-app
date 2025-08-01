@@ -1,4 +1,5 @@
 import type React from "react"
+
 export interface NavigationItem {
   href: string
   label: string
@@ -16,3 +17,6 @@ export interface AnimationVariants {
   animate: Record<string, any>
   exit?: Record<string, any>
 }
+
+// Re-export tweak types for global access
+export * from './tweak'
