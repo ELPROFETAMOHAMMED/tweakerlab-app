@@ -35,9 +35,11 @@ export async function POST(request: NextRequest) {
       // Continue with download even if count increment fails
     }
 
-    // Return the file content and metadata
+    // Return the file content and metadata (ensure .ini extension)
+    const cleanFileName = gameConfig.settings_file_name.replace(/\.settings$/, '.ini');
+
     return NextResponse.json({
-      fileName: gameConfig.settings_file_name,
+      fileName: cleanFileName,
       content: gameConfig.ini_content,
       mimeType: "text/plain",
       title: gameConfig.title
@@ -81,10 +83,11 @@ export async function GET(request: NextRequest) {
     // Increment download count
     await gameConfigsService.incrementDownloadCount(parseInt(gameConfigId));
 
-    // Create file download response
+    // Create file download response (ensure .ini extension)
+    const cleanFileName = gameConfig.settings_file_name.replace(/\.settings$/, '.ini');
     const headers = new Headers();
     headers.set('Content-Type', 'text/plain');
-    headers.set('Content-Disposition', `attachment; filename="${gameConfig.settings_file_name}"`);
+    headers.set('Content-Disposition', `attachment; filename="${cleanFileName}"`);
     headers.set('Cache-Control', 'no-cache');
 
     return new NextResponse(gameConfig.ini_content, {

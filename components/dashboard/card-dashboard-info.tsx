@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileCog, Download, Star, Users } from "lucide-react";
 import { useState } from "react";
+import { GameConfigsClientService } from "@/lib/services/client/game-configs-client-service";
 
 interface CardDashboardInfoProps {
   description: string;
@@ -36,39 +37,7 @@ export default function CardDashboardInfo({
     setDownloadError(null);
 
     try {
-      const response = await fetch('/api/game-configs/download', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ gameConfigId }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Download failed');
-      }
-
-      const { fileName, content, title } = await response.json();
-
-      // Create and download the file
-      const blob = new Blob([content], { type: 'text/plain' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = fileName;
-      link.style.display = 'none';
-
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      // Clean up the URL object
-      window.URL.revokeObjectURL(url);
-
-      // Optional: Show success message or toast
-      console.log(`Downloaded: ${fileName} for ${title}`);
-
+      await GameConfigsClientService.downloadGameConfig(gameConfigId);
     } catch (error) {
       console.error('Download error:', error);
       setDownloadError(error instanceof Error ? error.message : 'Download failed');

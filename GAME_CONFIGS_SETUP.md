@@ -60,7 +60,7 @@ The system comes with 8 popular games pre-configured:
 7. **Rocket League** - RLCS camera settings
 8. **Call of Duty** - Warzone tactical setup
 
-Each includes **real INI/settings file content** that users can download.
+Each includes **real INI file content** that users can download.
 
 ## 🔧 API Endpoints
 

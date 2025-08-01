@@ -6,10 +6,11 @@ import { ContentItem } from "./categories-carrousel";
 import ContentCarousel from "./categories-carrousel";
 import CardDashboardInfo from "./card-dashboard-info";
 import { GameConfigsSkeletonCarousel } from "./game-configs-skeleton-carousel";
+import { GameConfigsClientService } from "@/lib/services/client/game-configs-client-service";
 
 /**
  * Client component for rendering game configurations section
- * Uses separate skeleton component to maintain clean code separation
+ * Uses client service for all API calls - clean separation of concerns
  */
 export function GameConfigsSection() {
   const [gameConfigs, setGameConfigs] = useState<ContentItem[]>([]);
@@ -18,20 +19,17 @@ export function GameConfigsSection() {
   const [cardsCount, setCardsCount] = useState<number>(8); // Default fallback
 
   useEffect(() => {
-    // Fetch count first for accurate skeleton loading
-    fetchCardsCount();
-    // Then fetch the actual data
-    fetchGameConfigs();
+    // Fetch count and data in parallel for better performance
+    Promise.all([
+      fetchCardsCount(),
+      fetchGameConfigs()
+    ]);
   }, []);
 
   const fetchCardsCount = async () => {
     try {
-      const response = await fetch('/api/game-configs/count');
-
-      if (response.ok) {
-        const { count } = await response.json();
-        setCardsCount(count || 8); // Use fetched count or fallback to 8
-      }
+      const count = await GameConfigsClientService.getGameConfigsCount();
+      setCardsCount(count);
     } catch (err) {
       console.error('Error fetching cards count:', err);
       // Keep default count of 8 on error
@@ -40,13 +38,7 @@ export function GameConfigsSection() {
 
   const fetchGameConfigs = async () => {
     try {
-      const response = await fetch('/api/game-configs');
-
-      if (!response.ok) {
-        throw new Error('Failed to fetch game configurations');
-      }
-
-      const { data } = await response.json();
+      const data = await GameConfigsClientService.getAllGameConfigs();
 
       // Transform Supabase data to ContentItem format
       const transformedData = transformGameConfigsToContentItems(data);
@@ -58,6 +50,12 @@ export function GameConfigsSection() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRetry = async () => {
+    setLoading(true);
+    setError(null);
+    await fetchGameConfigs();
   };
 
   // Show skeleton while loading
@@ -81,11 +79,7 @@ export function GameConfigsSection() {
         <div className="text-center">
           <p className="text-destructive mb-4">{error}</p>
           <button
-            onClick={() => {
-              setLoading(true);
-              setError(null);
-              fetchGameConfigs();
-            }}
+            onClick={handleRetry}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
           >
             Try Again

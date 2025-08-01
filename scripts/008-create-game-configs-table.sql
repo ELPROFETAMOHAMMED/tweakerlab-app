@@ -65,7 +65,7 @@ INSERT INTO public.game_configs (
     'https://images.contentstack.io/v3/assets/bltb6530b271fddd0b1/blt5bdeb8d3f6a7fc5e/5eb7cdc1b337716b659dd560/V_AGENTS_587x900_Jett.jpg',
     'Popular',
     'FPS',
-    'valorant_pro.settings',
+    'valorant_pro.ini',
     '[VideoSettings]
 VideoMode=1920x1080
 FullScreenMode=1
@@ -104,7 +104,7 @@ CrosshairColor=00FF00',
     'https://cdn.cloudflare.steamstatic.com/apps/csgo/images/csgo_react/social/cs2.jpg',
     'Trending',
     'FPS',
-    'cs2_competitive.settings',
+    'cs2_competitive.ini',
     '[Video]
 resolution=1920x1080
 fullscreen=1
@@ -142,7 +142,7 @@ cl_crosshairalpha=255',
     'https://cdn2.unrealengine.com/fortnite-chapter-4-season-2-mega-city-key-art-3840x2160-b35b89041a7c.jpg',
     'Updated',
     'Battle Royale',
-    'fortnite_competitive.settings',
+    'fortnite_competitive.ini',
     '[Display]
 FullscreenMode=Fullscreen
 ResolutionX=1920
@@ -180,7 +180,7 @@ DialogVolume=0.5',
     'https://ddragon.leagueoflegends.com/cdn/img/champion/splash/Jinx_0.jpg',
     'Pro',
     'MOBA',
-    'lol_ranked.settings',
+    'lol_ranked.ini',
     '[General]
 WindowMode=2
 Resolution=1920x1080
@@ -219,7 +219,7 @@ PingsVolume=100',
     'https://media.contentapi.ea.com/content/dam/apex-legends/common/apex-section-bg.jpg.adapt.crop16x9.1023w.jpg',
     'Featured',
     'Battle Royale',
-    'apex_pro.settings',
+    'apex_pro.ini',
     '[Video]
 setting.cl_fovScale="1.7"
 setting.mat_vsync="0"
@@ -251,7 +251,7 @@ setting.mouse_use_per_scope_sensitivity_scalars="1"',
     'https://images.blz-contentstack.com/v3/assets/blt2477dcaf4ebd440c/blt5c63c9f7e0002eee/62f4613ad7f0c8057e76e4ed/OW2_KeyArt_2x1.png',
     'Esports',
     'FPS',
-    'overwatch2_comp.settings',
+    'overwatch2_comp.ini',
     '[Render.13]
 AADetail="0"
 EffectsQuality="1"
@@ -284,7 +284,7 @@ MouseAcceleration="0"',
     'https://rocketleague.media.zestyio.com/Overview-1920x1080.f1cb27a519bdb5b6ed34049a5b86e317.jpg',
     'Championship',
     'Sports',
-    'rocket_league_rlcs.settings',
+    'rocket_league_rlcs.ini',
     '[Camera]
 CameraFOV=110.0
 CameraDistance=270.0
@@ -323,7 +323,7 @@ UIVolume=0.6',
     'https://www.callofduty.com/content/dam/atvi/callofduty/cod-touchui/warzone/common/social-share/wz-social-share.jpg',
     'Tactical',
     'Battle Royale',
-    'warzone_tactical.settings',
+    'warzone_tactical.ini',
     '[Display]
 VideoMemoryScale=0.85
 RenderResolution=100
