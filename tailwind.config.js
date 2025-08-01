@@ -74,7 +74,7 @@ module.exports = {
     },
   },
   plugins: [
-    require("tailwindcss-animate"),
-    require('@tailwindcss/line-clamp')
+    require("tailwindcss-animate")
+    // line-clamp is included by default in Tailwind CSS 3.3+
   ],
 }
