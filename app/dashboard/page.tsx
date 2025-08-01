@@ -1,15 +1,11 @@
-import ContentCarousel, { ContentItem } from "@/components/dashboard/categories-carrousel";
 import DashboardHeader from "@/components/dashboard/sections/header";
+import { GameConfigsSection } from "@/components/dashboard/game-configs-section";
+import { GameConfigsLoading } from "@/components/ui/loading-states";
 import { createClient } from "@/lib/supabase/server";
 import { User } from "@/types/auth";
 import { PCInfo } from "@/types/pc-info";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { Download, Settings, Users, TrendingUp } from "lucide-react";
-import CardDashboardInfo from "@/components/dashboard/card-dashboard-info";
-import DashboardContent from "@/components/dashboard/dashboard-content";
-
-
+import { Suspense } from "react";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -30,7 +26,6 @@ export default async function DashboardPage() {
     )
     .eq("id", user.id)
     .single();
-
 
   const { data: parsedAt } = await supabase
     .from("pc_info")
@@ -53,9 +48,11 @@ export default async function DashboardPage() {
         pcInfo={pcInfo as PCInfo}
       />
 
-      {/* Dashboard content */}
-      <div className="w-full h-screen">
-        <DashboardContent />
+      {/* Game Configurations Section - Server-side rendered */}
+      <div className="w-full">
+        <Suspense fallback={<GameConfigsLoading />}>
+          <GameConfigsSection />
+        </Suspense>
       </div>
     </div>
   );
