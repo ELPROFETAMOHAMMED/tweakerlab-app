@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "target": "ES6",
     "skipLibCheck": true,
@@ -19,9 +23,39 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": [
+        "./*"
+      ],
+      "@/domains/*": [
+        "./src/domains/*"
+      ],
+      "@/tweaks/*": [
+        "./src/domains/tweaks/*"
+      ],
+      "@/game-configs/*": [
+        "./src/domains/game-configs/*"
+      ],
+      "@/dashboard/*": [
+        "./src/domains/dashboard/*"
+      ],
+      "@/auth/*": [
+        "./src/domains/auth/*"
+      ],
+      "@/pc-info/*": [
+        "./src/domains/pc-info/*"
+      ],
+      "@/shared/*": [
+        "./src/domains/shared/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }
