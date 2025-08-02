@@ -1,21 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search, Filter, X } from 'lucide-react';
-import { MOCK_TWEAKS } from '@/constants/tweaks-mock';
-import { transformTweaksToContentItems } from '@/lib/transformers/tweak-transformer';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import CardTweakInfo from './card-tweak-info';
-import { LoadingSpinner } from '@/components/ui/loading-states';
-import { ContentItem } from './categories-carrousel';
+import { TweaksGridSkeleton } from '@/components/ui/tweak-skeletons';
 import { TweakCategory, TweakRiskLevel, DeviceType, WindowsVersion, TweakStatus } from '@/types/tweak';
+import { useTweaks, useSearchTweaks, useTweaksCount } from '@/hooks/use-tweaks-cache';
+import { transformDatabaseTweaksToContentItems } from '@/lib/transformers/tweak-transformer';
 
 export default function TweaksFullPage() {
-  const [tweaks, setTweaks] = useState<ContentItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // Filter states
   const [searchQuery, setSearchQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<TweakCategory | 'all'>('all');
   const [riskFilter, setRiskFilter] = useState<TweakRiskLevel | 'all'>('all');
@@ -23,67 +20,54 @@ export default function TweaksFullPage() {
   const [windowsFilter, setWindowsFilter] = useState<WindowsVersion | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<TweakStatus | 'all'>('all');
 
-  useEffect(() => {
-    const loadTweaks = async () => {
-      try {
-        setIsLoading(true);
+  // Prepare filters for the cache hooks
+  const filters = useMemo(() => ({
+    category: categoryFilter !== 'all' ? categoryFilter : undefined,
+    riskLevel: riskFilter !== 'all' ? riskFilter : undefined,
+    deviceType: deviceFilter !== 'all' ? deviceFilter : undefined,
+    windowsVersion: windowsFilter !== 'all' ? windowsFilter : undefined,
+    status: statusFilter !== 'all' ? statusFilter : undefined,
+    limit: 100
+  }), [categoryFilter, riskFilter, deviceFilter, windowsFilter, statusFilter]);
 
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 600));
+  // Get count first for dynamic skeletons
+  const { data: totalCount = 0 } = useTweaksCount();
 
-        // Get all tweaks from mock data (including disabled for admin view)
-        const allTweaks = MOCK_TWEAKS;
+  // Use cache hooks - automatically handle loading and caching
+  const { data: tweaksData, isLoading: isTweaksLoading, error: tweaksError } = useTweaks(filters);
+  const { data: searchData, isLoading: isSearchLoading, error: searchError } = useSearchTweaks(
+    searchQuery,
+    100
+  );
 
-        // Transform to ContentItem format
-        const transformedTweaks = transformTweaksToContentItems(allTweaks);
+  // Determine which data to use and loading state
+  const isUsingSearch = searchQuery.length > 2;
+  const currentData = isUsingSearch ? searchData : tweaksData;
+  const isLoading = isUsingSearch ? isSearchLoading : isTweaksLoading;
+  const error = isUsingSearch ? searchError : tweaksError;
 
-        setTweaks(transformedTweaks);
-      } catch (err) {
-        console.error('Error loading tweaks:', err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  // Transform to UI format
+  const tweaks = useMemo(() => {
+    if (!currentData?.tweaks) return [];
+    return transformDatabaseTweaksToContentItems(currentData.tweaks);
+  }, [currentData]);
 
-    loadTweaks();
-  }, []);
+  // Convert error to string for display
+  const errorMessage = error ? (error instanceof Error ? error.message : 'Unknown error') : null;
 
-  // Filter tweaks based on search and filters
-  const filteredTweaks = useMemo(() => {
-    return tweaks.filter(tweak => {
-      const metadata = tweak.metadata as any;
 
-      // Search filter
-      const matchesSearch = searchQuery === '' ||
-        tweak.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tweak.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        metadata.category.toLowerCase().includes(searchQuery.toLowerCase());
 
-      // Category filter
-      const matchesCategory = categoryFilter === 'all' || metadata.category === categoryFilter;
-
-      // Risk filter
-      const matchesRisk = riskFilter === 'all' || metadata.riskLevel === riskFilter;
-
-      // Device filter
-      const matchesDevice = deviceFilter === 'all' ||
-        metadata.deviceType === deviceFilter ||
-        metadata.deviceType === 'both';
-
-      // Windows filter
-      const matchesWindows = windowsFilter === 'all' ||
-        metadata.windowsVersion === windowsFilter ||
-        metadata.windowsVersion === 'both';
-
-      // Status filter
-      const matchesStatus = statusFilter === 'all' || metadata.status === statusFilter;
-
-      return matchesSearch && matchesCategory && matchesRisk && matchesDevice && matchesWindows && matchesStatus;
-    });
-  }, [tweaks, searchQuery, categoryFilter, riskFilter, deviceFilter, windowsFilter, statusFilter]);
+  // Count active filters
+  const activeFiltersCount = [
+    categoryFilter !== 'all',
+    riskFilter !== 'all',
+    deviceFilter !== 'all',
+    windowsFilter !== 'all',
+    statusFilter !== 'all'
+  ].filter(Boolean).length;
 
   // Clear all filters
-  const clearFilters = () => {
+  const clearAllFilters = () => {
     setSearchQuery('');
     setCategoryFilter('all');
     setRiskFilter('all');
@@ -92,21 +76,53 @@ export default function TweaksFullPage() {
     setStatusFilter('all');
   };
 
-  // Count active filters
-  const activeFiltersCount = [
-    searchQuery !== '',
-    categoryFilter !== 'all',
-    riskFilter !== 'all',
-    deviceFilter !== 'all',
-    windowsFilter !== 'all',
-    statusFilter !== 'all'
-  ].filter(Boolean).length;
-
   if (isLoading) {
+    // Calculate dynamic skeleton count based on total count or reasonable default
+    const skeletonCount = Math.min(totalCount || 12, 20); // Show real count or max 20 for performance
+    return <TweaksGridSkeleton count={skeletonCount} />;
+  }
+
+  if (errorMessage) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-center py-12">
-          <LoadingSpinner message="Loading tweaks..." />
+        <div className="space-y-1 mb-6">
+          <div className="flex items-center gap-2">
+            <h2 className="text-2xl font-bold">⚙️ All System Tweaks</h2>
+          </div>
+          <p className="text-muted-foreground text-sm">
+            Search and filter Windows optimization tweaks
+          </p>
+        </div>
+        <div className="text-center py-12">
+          <div className="max-w-md mx-auto space-y-4">
+            <p className="text-muted-foreground mb-4">{errorMessage}</p>
+
+            {errorMessage.includes('Database not configured') && (
+              <div className="text-left bg-muted/50 p-4 rounded-lg text-sm space-y-2">
+                <p className="font-medium">🔧 Database Setup Required:</p>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>Go to your Supabase dashboard → SQL Editor</li>
+                  <li>Run <code className="bg-muted px-1 rounded font-mono">scripts/010-create-tweaks-table.sql</code></li>
+                  <li>Run <code className="bg-muted px-1 rounded font-mono">scripts/011-create-tweaks-functions.sql</code></li>
+                  <li>Run <code className="bg-muted px-1 rounded font-mono">scripts/012-insert-sample-tweaks.sql</code></li>
+                  <li>Refresh this page</li>
+                </ol>
+                <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-950 rounded border-l-2 border-blue-400">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    💡 <strong>Tip:</strong> You can also run <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded font-mono">scripts/debug-database-status.sql</code> to check what's missing.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button
+              variant="ghost"
+              onClick={() => window.location.reload()}
+              className="text-sm"
+            >
+              Try again
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -130,23 +146,17 @@ export default function TweaksFullPage() {
       {/* Search and Filters */}
       <div className="space-y-4">
         {/* Search Bar */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <div className="w-full max-w-md">
           <Input
-            placeholder="Search tweaks by name, description, or category..."
+            placeholder="Search tweaks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 pr-4"
+            className="w-full"
           />
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Filters:</span>
-          </div>
-
+        {/* Filter Controls */}
+        <div className="flex flex-wrap gap-3">
           {/* Category Filter */}
           <Select value={categoryFilter} onValueChange={(value: any) => setCategoryFilter(value)}>
             <SelectTrigger className="w-[140px]">
@@ -154,9 +164,9 @@ export default function TweaksFullPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Categories</SelectItem>
+              <SelectItem value="gaming">🎮 Gaming</SelectItem>
               <SelectItem value="performance">⚡ Performance</SelectItem>
               <SelectItem value="privacy">🛡️ Privacy</SelectItem>
-              <SelectItem value="gaming">🎮 Gaming</SelectItem>
               <SelectItem value="battery">🔋 Battery</SelectItem>
               <SelectItem value="appearance">🎨 Appearance</SelectItem>
               <SelectItem value="network">🌐 Network</SelectItem>
@@ -168,12 +178,12 @@ export default function TweaksFullPage() {
           {/* Risk Level Filter */}
           <Select value={riskFilter} onValueChange={(value: any) => setRiskFilter(value)}>
             <SelectTrigger className="w-[120px]">
-              <SelectValue placeholder="Risk Level" />
+              <SelectValue placeholder="Risk" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Risks</SelectItem>
-              <SelectItem value="minimal">🟢 Safe</SelectItem>
-              <SelectItem value="low">🔵 Low</SelectItem>
+              <SelectItem value="all">All Risk</SelectItem>
+              <SelectItem value="minimal">✅ Minimal</SelectItem>
+              <SelectItem value="low">🟢 Low</SelectItem>
               <SelectItem value="medium">🟡 Medium</SelectItem>
               <SelectItem value="high">🟠 High</SelectItem>
               <SelectItem value="critical">🔴 Critical</SelectItem>
@@ -224,10 +234,9 @@ export default function TweaksFullPage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={clearFilters}
-              className="flex items-center gap-2"
+              onClick={clearAllFilters}
+              className="h-10"
             >
-              <X className="h-3 w-3" />
               Clear ({activeFiltersCount})
             </Button>
           )}
@@ -235,13 +244,7 @@ export default function TweaksFullPage() {
 
         {/* Active Filters Display */}
         {activeFiltersCount > 0 && (
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-muted-foreground">Active filters:</span>
-            {searchQuery && (
-              <Badge variant="secondary" className="text-xs">
-                Search: "{searchQuery}"
-              </Badge>
-            )}
+          <div className="flex flex-wrap gap-2">
             {categoryFilter !== 'all' && (
               <Badge variant="secondary" className="text-xs">
                 Category: {categoryFilter}
@@ -272,41 +275,28 @@ export default function TweaksFullPage() {
       </div>
 
       {/* Results */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {filteredTweaks.length} of {tweaks.length} tweaks
+      {tweaks.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-muted-foreground mb-4">
+            {searchQuery ? `No tweaks found for "${searchQuery}"` : 'No tweaks match your filters'}
           </p>
+          <Button variant="ghost" onClick={clearAllFilters} className="text-sm">
+            Clear all filters
+          </Button>
         </div>
-
-        {/* Tweaks Grid */}
-        {filteredTweaks.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTweaks.map((tweak) => (
-              <CardTweakInfo
-                key={tweak.id}
-                id={String(tweak.id)}
-                title={tweak.title}
-                description={tweak.description}
-                metadata={tweak.metadata as any}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12">
-            <div className="text-muted-foreground mb-4">
-              <Search className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p className="text-lg font-medium">No tweaks found</p>
-              <p className="text-sm">Try adjusting your search or filters</p>
-            </div>
-            {activeFiltersCount > 0 && (
-              <Button variant="outline" onClick={clearFilters}>
-                Clear all filters
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {tweaks.map((tweak) => (
+            <CardTweakInfo
+              key={tweak.id}
+              id={tweak.id}
+              title={tweak.title}
+              description={tweak.description}
+              metadata={tweak.metadata}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { Tweak, TweakRiskLevel } from '@/types/tweak';
+import { Tweak, TweakRiskLevel, TweakCategory, DeviceType, WindowsVersion } from '@/types/tweak';
+import { DatabaseTweak } from '@/lib/services/tweaks-service';
 import { ContentItem } from '@/components/dashboard/categories-carrousel';
 
 // Risk level styling configuration
@@ -48,39 +49,66 @@ const DEVICE_TYPE_CONFIG = {
 
 // Category display configuration
 const CATEGORY_CONFIG = {
-  performance: { icon: '⚡', color: 'blue' },
-  privacy: { icon: '🛡️', color: 'green' },
-  gaming: { icon: '🎮', color: 'purple' },
-  battery: { icon: '🔋', color: 'green' },
-  appearance: { icon: '🎨', color: 'pink' },
-  network: { icon: '🌐', color: 'blue' },
-  system: { icon: '⚙️', color: 'gray' },
-  security: { icon: '🔒', color: 'red' }
+  gaming: {
+    icon: '🎮',
+    text: 'Gaming',
+    color: 'purple'
+  },
+  performance: {
+    icon: '⚡',
+    text: 'Performance',
+    color: 'blue'
+  },
+  privacy: {
+    icon: '🛡️',
+    text: 'Privacy',
+    color: 'green'
+  },
+  battery: {
+    icon: '🔋',
+    text: 'Battery',
+    color: 'green'
+  },
+  appearance: {
+    icon: '🎨',
+    text: 'Appearance',
+    color: 'pink'
+  },
+  network: {
+    icon: '🌐',
+    text: 'Network',
+    color: 'blue'
+  },
+  system: {
+    icon: '⚙️',
+    text: 'System',
+    color: 'gray'
+  },
+  security: {
+    icon: '🔒',
+    text: 'Security',
+    color: 'red'
+  }
 } as const;
 
 /**
- * Transform Tweak data to ContentItem format for carousel components
+ * Transform tweaks to ContentItem format for UI components
  */
 export function transformTweaksToContentItems(tweaks: Tweak[]): ContentItem[] {
-  return tweaks.map((tweak) => {
-    const riskConfig = RISK_LEVEL_CONFIG[tweak.risk_level];
-    const deviceConfig = DEVICE_TYPE_CONFIG[tweak.specs.device_type];
-    const categoryConfig = CATEGORY_CONFIG[tweak.category];
+  return tweaks.map(tweak => {
+    const riskConfig = RISK_LEVEL_CONFIG[tweak.risk_level] || RISK_LEVEL_CONFIG.low;
+    const deviceConfig = DEVICE_TYPE_CONFIG[tweak.specs.device_type] || DEVICE_TYPE_CONFIG.both;
 
     return {
       id: tweak.id,
       title: tweak.title,
       description: tweak.description,
-      image: `/icons/tweaks/${tweak.icon_file_name}`, // Placeholder path
-      icon: categoryConfig.icon,
-      badge: riskConfig.text,
-      // Additional metadata for tweak-specific rendering
       metadata: {
         tweakId: tweak.id,
         category: tweak.category,
         riskLevel: tweak.risk_level,
         riskColor: riskConfig.color,
-        riskDescription: riskConfig.description,
+        riskDescription: tweak.risk_description,
         deviceType: tweak.specs.device_type,
         deviceIcon: deviceConfig.icon,
         deviceText: deviceConfig.text,
@@ -103,6 +131,54 @@ export function transformTweaksToContentItems(tweaks: Tweak[]): ContentItem[] {
         requiresTweaks: tweak.requires_tweaks || [],
         // New fields
         status: tweak.status,
+        adminNotes: tweak.admin_notes,
+        disableReason: tweak.disable_reason,
+        reportsCount: tweak.reports_count
+      }
+    };
+  });
+}
+
+/**
+ * Transform database tweaks to ContentItem format for UI components
+ */
+export function transformDatabaseTweaksToContentItems(tweaks: DatabaseTweak[]): ContentItem[] {
+  return tweaks.map(tweak => {
+    const riskConfig = RISK_LEVEL_CONFIG[tweak.risk_level as TweakRiskLevel] || RISK_LEVEL_CONFIG.low;
+    const deviceConfig = DEVICE_TYPE_CONFIG[tweak.device_type as DeviceType] || DEVICE_TYPE_CONFIG.both;
+
+    return {
+      id: tweak.id,
+      title: tweak.title,
+      description: tweak.description,
+      metadata: {
+        tweakId: tweak.id,
+        category: tweak.category,
+        riskLevel: tweak.risk_level as TweakRiskLevel,
+        riskColor: riskConfig.color,
+        riskDescription: riskConfig.description,
+        deviceType: tweak.device_type as DeviceType,
+        deviceIcon: deviceConfig.icon,
+        deviceText: deviceConfig.text,
+        windowsVersion: tweak.windows_version as WindowsVersion,
+        requiresAdmin: tweak.requires_admin,
+        requiresRestart: tweak.requires_restart,
+        affectsBattery: tweak.affects_battery,
+        affectsPerformance: tweak.affects_performance,
+        affectsSecurity: tweak.affects_security,
+        fileExtension: tweak.file_extension,
+        fileSizeBytes: tweak.file_size_bytes,
+        downloads: tweak.downloads_count,
+        likes: tweak.likes_count,
+        rating: tweak.rating,
+        successRate: tweak.success_rate,
+        isVerifiedAuthor: tweak.author_verified,
+        authorName: tweak.author_name,
+        reversalMethod: tweak.reversal_method,
+        conflictsWith: tweak.conflicts_with || [],
+        requiresTweaks: tweak.requires_tweaks || [],
+        // New fields
+        status: tweak.status as 'active' | 'disabled' | 'deprecated',
         adminNotes: tweak.admin_notes,
         disableReason: tweak.disable_reason,
         reportsCount: tweak.reports_count

@@ -1,65 +1,33 @@
 "use client"
 
-import { useEffect, useState } from "react";
 import { transformGameConfigsToContentItems } from "@/lib/transformers/game-config-transformer";
-import { ContentItem } from "./categories-carrousel";
 import ContentCarousel from "./categories-carrousel";
 import CardDashboardInfo from "./card-dashboard-info";
 import { GameConfigsSkeletonCarousel } from "./game-configs-skeleton-carousel";
-import { GameConfigsClientService } from "@/lib/services/client/game-configs-client-service";
+import { useGameConfigs, useGameConfigsCount } from "@/hooks/use-game-configs-cache";
 
 /**
  * Client component for rendering game configurations section
- * Uses client service for all API calls - clean separation of concerns
+ * Now uses TanStack Query cache for blazing fast performance! 🚀
  */
 export function GameConfigsSection() {
-  const [gameConfigs, setGameConfigs] = useState<ContentItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [cardsCount, setCardsCount] = useState<number>(8); // Default fallback
+  // Use cache hooks - much simpler and faster!
+  const { data: gameConfigsData, isLoading: isLoadingConfigs, error: configsError, refetch } = useGameConfigs();
+  const { data: cardsCount = 8, isLoading: isLoadingCount } = useGameConfigsCount();
 
-  useEffect(() => {
-    // Fetch count and data in parallel for better performance
-    Promise.all([
-      fetchCardsCount(),
-      fetchGameConfigs()
-    ]);
-  }, []);
+  const isLoading = isLoadingConfigs || isLoadingCount;
+  const gameConfigs = gameConfigsData ? transformGameConfigsToContentItems(gameConfigsData) : [];
 
-  const fetchCardsCount = async () => {
-    try {
-      const count = await GameConfigsClientService.getGameConfigsCount();
-      setCardsCount(count);
-    } catch (err) {
-      console.error('Error fetching cards count:', err);
-      // Keep default count of 8 on error
-    }
-  };
+  // Convert error to string if it exists
+  const errorMessage = configsError ?
+    (configsError instanceof Error ? configsError.message : 'Failed to load game configurations') : null;
 
-  const fetchGameConfigs = async () => {
-    try {
-      const data = await GameConfigsClientService.getAllGameConfigs();
-
-      // Transform Supabase data to ContentItem format
-      const transformedData = transformGameConfigsToContentItems(data);
-      setGameConfigs(transformedData);
-    } catch (err) {
-      console.error('Error fetching game configs:', err);
-      setError('Failed to load game configurations');
-      setGameConfigs([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleRetry = async () => {
-    setLoading(true);
-    setError(null);
-    await fetchGameConfigs();
+  const handleRetry = () => {
+    refetch();
   };
 
   // Show skeleton while loading
-  if (loading) {
+  if (isLoading) {
     return (
       <GameConfigsSkeletonCarousel
         count={cardsCount}
@@ -73,11 +41,11 @@ export function GameConfigsSection() {
     );
   }
 
-  if (error) {
+  if (errorMessage) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <p className="text-destructive mb-4">{error}</p>
+          <p className="text-destructive mb-4">{errorMessage}</p>
           <button
             onClick={handleRetry}
             className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"

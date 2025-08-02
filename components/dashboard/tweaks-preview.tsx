@@ -1,89 +1,67 @@
 "use client";
 
-import { useState, useEffect } from 'react';
-import { MOCK_TWEAKS, getFeaturedTweaks } from '@/constants/tweaks-mock';
-import { transformTweaksToContentItems } from '@/lib/transformers/tweak-transformer';
+import { Button } from '@/components/ui/button';
 import CardTweakInfo from './card-tweak-info';
-import { LoadingSpinner } from '@/components/ui/loading-states';
-import { ContentItem } from './categories-carrousel';
+import { TweaksPreviewSkeleton } from '@/components/ui/tweak-skeletons';
+import { useFeaturedTweaks, useTweaksCount } from '@/hooks/use-tweaks-cache';
+import { transformDatabaseTweaksToContentItems } from '@/lib/transformers/tweak-transformer';
 
-interface TweaksPreviewProps {
-  onViewAll: () => void;
-}
+export default function TweaksPreview() {
+  // Get count first (fast), then get featured tweaks
+  const { data: totalCount = 0, isLoading: isCountLoading } = useTweaksCount();
+  const { data: featuredData, isLoading: isFeaturedLoading, error: featuredError } = useFeaturedTweaks(4);
 
-export default function TweaksPreview({ onViewAll }: TweaksPreviewProps) {
-  const [tweaks, setTweaks] = useState<ContentItem[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const tweaks = featuredData?.tweaks ? transformDatabaseTweaksToContentItems(featuredData.tweaks) : [];
 
-  useEffect(() => {
-    const loadTweaks = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  // Convert error to string if it exists
+  const error = featuredError ?
+    (featuredError instanceof Error ? featuredError.message : 'Unknown error') : null;
 
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        // Get featured tweaks from mock data - limit to 4
-        const featuredTweaks = getFeaturedTweaks().slice(0, 4);
-
-        // Transform to ContentItem format
-        const transformedTweaks = transformTweaksToContentItems(featuredTweaks);
-
-        setTweaks(transformedTweaks);
-      } catch (err) {
-        console.error('Error loading tweaks preview:', err);
-        setError('Failed to load tweaks preview. Please try again.');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadTweaks();
-  }, []);
-
-  if (isLoading) {
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold">System Tweaks</h2>
-          <LoadingSpinner />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="animate-pulse">
-              <div className="bg-muted rounded-lg h-80 w-full"></div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+  // Show skeleton with dynamic count (max 4 for preview)
+  if (isFeaturedLoading) {
+    const skeletonCount = Math.min(totalCount || 4, 4); // Show real count or fallback to 4
+    return <TweaksPreviewSkeleton count={skeletonCount} />;
   }
 
   if (error) {
     return (
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">System Tweaks</h2>
-        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
-          <p className="text-destructive text-sm">{error}</p>
-          <button
-            onClick={() => window.location.reload()}
-            className="mt-2 text-sm text-destructive hover:underline"
-          >
-            Try again
-          </button>
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-bold">⚙️ System Tweaks</h2>
+          <p className="text-muted-foreground text-sm mt-1">
+            Featured tweaks to optimize your Windows system
+          </p>
         </div>
-      </div>
-    );
-  }
+        <div className="text-center py-12">
+          <div className="max-w-md mx-auto space-y-4">
+            <p className="text-muted-foreground mb-4">{error}</p>
 
-  if (tweaks.length === 0) {
-    return (
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">System Tweaks</h2>
-        <div className="bg-muted/50 border border-muted rounded-lg p-8 text-center">
-          <p className="text-muted-foreground">No tweaks available at the moment.</p>
+            {error.includes('Database not configured') && (
+              <div className="text-left bg-muted/50 p-4 rounded-lg text-sm space-y-2">
+                <p className="font-medium">🔧 Database Setup Required:</p>
+                <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
+                  <li>Go to your Supabase dashboard → SQL Editor</li>
+                  <li>Run <code className="bg-muted px-1 rounded font-mono">scripts/010-create-tweaks-table.sql</code></li>
+                  <li>Run <code className="bg-muted px-1 rounded font-mono">scripts/011-create-tweaks-functions.sql</code></li>
+                  <li>Run <code className="bg-muted px-1 rounded font-mono">scripts/012-insert-sample-tweaks.sql</code></li>
+                  <li>Refresh this page</li>
+                </ol>
+                <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-950 rounded border-l-2 border-blue-400">
+                  <p className="text-xs text-blue-700 dark:text-blue-300">
+                    💡 <strong>Tip:</strong> You can also run <code className="bg-blue-100 dark:bg-blue-900 px-1 rounded font-mono">scripts/debug-database-status.sql</code> to check what's missing.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            <Button
+              variant="ghost"
+              onClick={() => window.location.reload()}
+              className="text-sm"
+            >
+              Try again
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -92,32 +70,25 @@ export default function TweaksPreview({ onViewAll }: TweaksPreviewProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
-          <h2 className="text-2xl font-bold">⚙️ System Tweaks</h2>
-          <span className="text-xs bg-muted px-2 py-1 rounded-full text-muted-foreground font-medium">
-            {MOCK_TWEAKS.filter(t => t.is_active).length} available
-          </span>
-        </div>
-        <p className="text-muted-foreground text-sm">
-          Featured Windows optimization tweaks
+      <div>
+        <h2 className="text-2xl font-bold">⚙️ System Tweaks</h2>
+        <p className="text-muted-foreground text-sm mt-1">
+          Featured tweaks to optimize your Windows system • Explore {totalCount}+ available tweaks
         </p>
       </div>
 
-      {/* Tweaks Grid - 4 columns */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Grid of featured tweaks */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {tweaks.map((tweak) => (
           <CardTweakInfo
             key={tweak.id}
-            id={String(tweak.id)}
+            id={tweak.id}
             title={tweak.title}
             description={tweak.description}
-            metadata={tweak.metadata as any}
+            metadata={tweak.metadata}
           />
         ))}
       </div>
-
-
     </div>
   );
 }

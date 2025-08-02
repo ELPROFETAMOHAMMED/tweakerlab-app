@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import ContentCarousel from './categories-carrousel';
 import { ContentItem } from './categories-carrousel';
-import { MOCK_TWEAKS, getFeaturedTweaks } from '@/constants/tweaks-mock';
+import { getFeaturedTweaks } from '@/constants/tweaks-mock';
 import { transformTweaksToContentItems } from '@/lib/transformers/tweak-transformer';
 import CardTweakInfo from './card-tweak-info';
 import { LoadingSpinner } from '@/components/ui/loading-states';

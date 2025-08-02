@@ -1,4 +1,4 @@
-import { Tweak, TweakRiskLevel, TweakCategory, WindowsVersion, DeviceType, TweakFileType, TweakStatus } from '@/types/tweak';
+import { Tweak, TweakRiskLevel, TweakCategory, WindowsVersion, DeviceType, TweakFileType, TweakStatus, ReportType } from '@/types/tweak';
 
 export const MOCK_TWEAKS: Tweak[] = [
   {
@@ -273,9 +273,10 @@ Write-Host "Battery optimization complete!" -ForegroundColor Green`,
       affects_performance: false,
       affects_security: false,
     },
-    risk_level: "minimal" as TweakRiskLevel,
-    risk_description: "Very safe tweak. Only affects visual appearance. May require Explorer restart.",
-    reversal_method: "Delete the registry keys or set TaskbarAl back to 1 for centered taskbar.",
+    risk: {
+      risk_level: "minimal" as TweakRiskLevel,
+      risk_description: "Very safe tweak. Only affects visual appearance. May require Explorer restart.",
+    },
     stats: {
       downloads_count: 45720,
       likes_count: 5234,
@@ -294,8 +295,24 @@ Write-Host "Battery optimization complete!" -ForegroundColor Green`,
       name: "UIClassic",
       verified: true
     },
-    reports_count: 1,
-    last_report_date: "2024-01-20T12:30:00Z"
+    reports: {
+      reports_count: 1,
+      last_report_date: "2024-01-20T12:30:00Z",
+      reports: [
+        {
+          id: "report-001",
+          title: "Windows 11 Classic Start Menu Restore",
+          description: "Bring back the Windows 10 style Start Menu and taskbar in Windows 11.",
+          report_id: "user_1234567890",
+          report_date: "2024-01-20T12:30:00Z",
+          report_status: "pending" as ReportStatus,
+          report_type: "bug" as ReportType,
+          report_severity: "low" as ReportSeverity,
+          report_category: "ui" as ReportCategory,
+          report_description: "The start menu is not working as expected. It is not showing the correct icons and the taskbar is not aligned to the left.",
+        }
+      ]
+    }
   },
 
   {

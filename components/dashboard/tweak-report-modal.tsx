@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Flag, AlertTriangle, Bug, Zap, Shield, HelpCircle } from 'lucide-react';
 import { ReportType } from '@/types/tweak';
+import { TweaksClientService } from '@/lib/services/client/tweaks-client-service';
 
 interface TweakReportModalProps {
   tweakId: string;
@@ -24,6 +25,7 @@ export default function TweakReportModal({ tweakId, tweakTitle, children }: Twea
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [includeSystemInfo, setIncludeSystemInfo] = useState(true);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   const reportTypes = [
     { value: 'bug', label: 'Bug/Error', icon: Bug, description: 'The tweak caused an error or unexpected behavior' },
@@ -36,38 +38,40 @@ export default function TweakReportModal({ tweakId, tweakTitle, children }: Twea
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setSubmitError(null);
 
     try {
-      // Mock API call - replace with actual implementation
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Collect system information if requested
+      const systemInfo = includeSystemInfo ? {
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        language: navigator.language,
+        timestamp: new Date().toISOString(),
+        screenResolution: `${screen.width}x${screen.height}`,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      } : undefined;
 
-      // TODO: Implement actual report submission
-      console.log('Report submitted:', {
+      // Submit report via API
+      const response = await TweaksClientService.submitReport({
         tweakId,
-        reportType,
-        title,
-        description,
-        includeSystemInfo,
-        systemInfo: includeSystemInfo ? {
-          userAgent: navigator.userAgent,
-          platform: navigator.platform,
-          language: navigator.language,
-          timestamp: new Date().toISOString()
-        } : null
+        reportType: reportType as ReportType,
+        title: title.trim(),
+        description: description.trim(),
+        userSystemInfo: systemInfo
       });
 
-      // Reset form and close modal
+      // Reset form on success
       setReportType('');
       setTitle('');
       setDescription('');
       setIsOpen(false);
 
-      // Show success message (you could use toast here)
-      alert('Report submitted successfully! Our team will review it shortly.');
+      // Show success message (you could use toast here instead)
+      alert(`Report submitted successfully! Report ID: ${response.reportId}\n\n${response.message}`);
 
     } catch (error) {
       console.error('Error submitting report:', error);
-      alert('Failed to submit report. Please try again.');
+      setSubmitError(error instanceof Error ? error.message : 'Failed to submit report. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -95,6 +99,16 @@ export default function TweakReportModal({ tweakId, tweakTitle, children }: Twea
             <p className="text-sm font-medium">{tweakTitle}</p>
             <p className="text-xs text-muted-foreground">ID: {tweakId}</p>
           </div>
+
+          {/* Submit Error */}
+          {submitError && (
+            <Alert className="border-destructive/20 bg-destructive/5">
+              <AlertTriangle className="h-4 w-4 text-destructive" />
+              <AlertDescription className="text-xs text-destructive">
+                {submitError}
+              </AlertDescription>
+            </Alert>
+          )}
 
           {/* Report Type */}
           <div className="space-y-2">
@@ -131,6 +145,7 @@ export default function TweakReportModal({ tweakId, tweakTitle, children }: Twea
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Causes blue screen on startup"
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -144,6 +159,7 @@ export default function TweakReportModal({ tweakId, tweakTitle, children }: Twea
               placeholder="Please provide as much detail as possible about what happened, when it occurred, and any error messages you saw..."
               rows={4}
               required
+              disabled={isSubmitting}
             />
           </div>
 
@@ -154,6 +170,7 @@ export default function TweakReportModal({ tweakId, tweakTitle, children }: Twea
               id="system-info"
               checked={includeSystemInfo}
               onChange={(e) => setIncludeSystemInfo(e.target.checked)}
+              disabled={isSubmitting}
               className="rounded"
             />
             <Label htmlFor="system-info" className="text-sm">

@@ -28,7 +28,7 @@ export default function DashboardPaginatedContent() {
 
             {/* System Tweaks Preview - Client-side rendered */}
             <div className="w-full">
-              <TweaksPreview onViewAll={() => setCurrentPage(2)} />
+              <TweaksPreview />
             </div>
           </div>
         );

@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { formatFileSize, formatSuccessRate } from '@/lib/transformers/tweak-transformer';
 import { formatDownloads } from '@/lib/utils/format-helpers';
+import { useDownloadTweak, useLikeTweak } from '@/hooks/use-tweaks-cache';
 
 interface TweakCardProps {
   id: string;
@@ -63,9 +64,12 @@ export default function CardTweakInfo({
   description,
   metadata
 }: TweakCardProps) {
-  const [isDownloading, setIsDownloading] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
+
+  // Use cache mutations - they handle loading states
+  const downloadMutation = useDownloadTweak();
+  const likeMutation = useLikeTweak();
 
   const handleDownloadClick = () => {
     // If disabled, show dialog with disable reason
@@ -79,25 +83,26 @@ export default function CardTweakInfo({
   };
 
   const handleActualDownload = async () => {
-    setIsDownloading(true);
     try {
-      // TODO: Implement actual download service
-      // await TweaksClientService.downloadTweak(metadata.tweakId);
-
-      // Mock download for now
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      console.log(`Downloading tweak: ${metadata.tweakId}`);
-
+      // Use cache mutation - handles loading state automatically
+      await downloadMutation.mutateAsync(metadata.tweakId);
     } catch (error) {
       console.error('Error downloading tweak:', error);
-    } finally {
-      setIsDownloading(false);
+      alert('Failed to download tweak. Please try again.');
     }
   };
 
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    // TODO: Implement like functionality
+  const handleLike = async () => {
+    try {
+      const action = isLiked ? 'unlike' : 'like';
+      // Use cache mutation with optimistic updates
+      await likeMutation.mutateAsync({ tweakId: metadata.tweakId, action });
+      setIsLiked(!isLiked);
+    } catch (error) {
+      console.error('Error toggling like:', error);
+      // Revert optimistic update on error (mutation handles cache revert)
+      setIsLiked(isLiked);
+    }
   };
 
   const isDisabled = metadata.status === 'disabled';
@@ -106,17 +111,18 @@ export default function CardTweakInfo({
   return (
     <div className="relative h-full">
       <Card className="h-full flex flex-col hover:shadow-lg transition-shadow duration-200 relative overflow-hidden">
-        {/* Risk Level Dot - Top Right */}
+        {/* Report Button - Top Right */}
         <div className="absolute top-2 right-2 z-10">
-          <div className={`
-            w-3 h-3 rounded-full
-            ${metadata.riskLevel === 'minimal' ? 'bg-emerald-500' :
-              metadata.riskLevel === 'low' ? 'bg-blue-500' :
-                metadata.riskLevel === 'medium' ? 'bg-yellow-500' :
-                  metadata.riskLevel === 'high' ? 'bg-orange-500' : 'bg-red-500'}
-          `}
-            title={`${metadata.riskLevel.toUpperCase()} Risk`}
-          />
+          <TweakReportModal tweakId={metadata.tweakId} tweakTitle={title}>
+            <Button
+              variant="outline"
+              size="sm"
+              className="p-1 h-7 w-7 rounded-md"
+              title="Report an issue with this tweak"
+            >
+              <Flag className="h-3 w-3" />
+            </Button>
+          </TweakReportModal>
         </div>
 
         {/* Top - Icon and Title */}
@@ -210,13 +216,13 @@ export default function CardTweakInfo({
               </div>
             </div>
 
-            <div className="font-medium text-emerald-600 dark:text-emerald-400">
-              {formatSuccessRate(metadata.successRate)}
+            <div className="font-medium text-muted-foreground text-right">
+              {formatFileSize(metadata.fileSizeBytes)}
             </div>
           </div>
 
           <div className="text-[10px] text-muted-foreground text-center">
-            {formatFileSize(metadata.fileSizeBytes)} • {metadata.fileExtension}
+            File type: {metadata.fileExtension}
           </div>
         </div>
 
@@ -225,11 +231,11 @@ export default function CardTweakInfo({
           <div className="flex gap-2 mb-2">
             <Button
               onClick={handleDownloadClick}
-              disabled={isDownloading || isDeprecated}
+              disabled={downloadMutation.isPending || isDeprecated}
               size="sm"
               className="flex-1 h-8"
             >
-              {isDownloading ? (
+              {downloadMutation.isPending ? (
                 <>
                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-background mr-1" />
                   ...
@@ -251,21 +257,6 @@ export default function CardTweakInfo({
             >
               <Heart className={`h-3 w-3 ${isLiked ? 'fill-destructive' : ''}`} />
             </Button>
-
-            {/* Report Button */}
-            <TweakReportModal tweakId={metadata.tweakId} tweakTitle={title}>
-              <Button
-                variant="outline"
-                size="sm"
-                className="px-2 h-8"
-                title="Report an issue with this tweak"
-              >
-                <Flag className="h-3 w-3" />
-                {metadata.reportsCount && metadata.reportsCount > 0 && (
-                  <span className="ml-1 text-xs">{metadata.reportsCount}</span>
-                )}
-              </Button>
-            </TweakReportModal>
           </div>
 
           <div className="text-[9px] text-muted-foreground text-center">

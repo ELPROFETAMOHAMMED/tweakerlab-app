@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileCog, Download, Star, Users } from "lucide-react";
 import { useState } from "react";
-import { GameConfigsClientService } from "@/lib/services/client/game-configs-client-service";
+import { useDownloadGameConfig } from "@/hooks/use-game-configs-cache";
 
 interface CardDashboardInfoProps {
   description: string;
@@ -24,8 +24,10 @@ export default function CardDashboardInfo({
   category,
   gameConfigId
 }: CardDashboardInfoProps) {
-  const [isDownloading, setIsDownloading] = useState(false);
   const [downloadError, setDownloadError] = useState<string | null>(null);
+
+  // Use cache mutation - handles loading state automatically
+  const downloadMutation = useDownloadGameConfig();
 
   const handleDownload = async () => {
     if (!gameConfigId) {
@@ -33,16 +35,13 @@ export default function CardDashboardInfo({
       return;
     }
 
-    setIsDownloading(true);
     setDownloadError(null);
 
     try {
-      await GameConfigsClientService.downloadGameConfig(gameConfigId);
+      await downloadMutation.mutateAsync(gameConfigId);
     } catch (error) {
       console.error('Download error:', error);
       setDownloadError(error instanceof Error ? error.message : 'Download failed');
-    } finally {
-      setIsDownloading(false);
     }
   };
 
@@ -100,9 +99,9 @@ export default function CardDashboardInfo({
           variant="secondary"
           className="w-full"
           onClick={handleDownload}
-          disabled={isDownloading || !gameConfigId}
+          disabled={downloadMutation.isPending || !gameConfigId}
         >
-          {isDownloading ? (
+          {downloadMutation.isPending ? (
             <>
               <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-2" />
               Downloading...
