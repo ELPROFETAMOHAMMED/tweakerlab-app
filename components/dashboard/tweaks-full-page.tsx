@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import CardTweakInfo from './card-tweak-info';
 import { TweaksGridSkeleton } from '@/components/ui/tweak-skeletons';
 import { TweakCategory, TweakRiskLevel, DeviceType, WindowsVersion, TweakStatus } from '@/types/tweak';
-import { useTweaks, useSearchTweaks, useTweaksCount } from '@/hooks/use-tweaks-cache';
+import { useTweaks, useSearchTweaks, useTweaksCount } from '@/tweaks';
 import { transformDatabaseTweaksToContentItems } from '@/lib/transformers/tweak-transformer';
 
 export default function TweaksFullPage() {

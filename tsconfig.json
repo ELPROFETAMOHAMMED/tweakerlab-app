@@ -29,20 +29,38 @@
       "@/domains/*": [
         "./src/domains/*"
       ],
+      "@/tweaks": [
+        "./src/domains/tweaks"
+      ],
       "@/tweaks/*": [
         "./src/domains/tweaks/*"
+      ],
+      "@/game-configs": [
+        "./src/domains/game-configs"
       ],
       "@/game-configs/*": [
         "./src/domains/game-configs/*"
       ],
+      "@/dashboard": [
+        "./src/domains/dashboard"
+      ],
       "@/dashboard/*": [
         "./src/domains/dashboard/*"
+      ],
+      "@/auth": [
+        "./src/domains/auth"
       ],
       "@/auth/*": [
         "./src/domains/auth/*"
       ],
+      "@/pc-info": [
+        "./src/domains/pc-info"
+      ],
       "@/pc-info/*": [
         "./src/domains/pc-info/*"
+      ],
+      "@/shared": [
+        "./src/domains/shared"
       ],
       "@/shared/*": [
         "./src/domains/shared/*"

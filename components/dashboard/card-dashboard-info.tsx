@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FileCog, Download, Star, Users } from "lucide-react";
 import { useState } from "react";
-import { useDownloadGameConfig } from "@/hooks/use-game-configs-cache";
+import { useDownloadGameConfig } from "@/game-configs";
 
 interface CardDashboardInfoProps {
   description: string;

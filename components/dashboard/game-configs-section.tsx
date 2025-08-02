@@ -4,7 +4,7 @@ import { transformGameConfigsToContentItems } from "@/lib/transformers/game-conf
 import ContentCarousel from "./categories-carrousel";
 import CardDashboardInfo from "./card-dashboard-info";
 import { GameConfigsSkeletonCarousel } from "./game-configs-skeleton-carousel";
-import { useGameConfigs, useGameConfigsCount } from "@/hooks/use-game-configs-cache";
+import { useGameConfigs, useGameConfigsCount } from "@/game-configs";
 
 /**
  * Client component for rendering game configurations section

@@ -2,8 +2,8 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@/components/ui/badge';
-import { tweaksKeys } from '@/hooks/use-tweaks-cache';
-import { gameConfigsKeys } from '@/hooks/use-game-configs-cache';
+import { tweaksKeys } from '@/tweaks';
+import { gameConfigsKeys } from '@/game-configs';
 import { useEffect, useState } from 'react';
 
 export function CacheStatus() {

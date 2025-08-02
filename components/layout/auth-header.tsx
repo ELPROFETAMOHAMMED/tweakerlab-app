@@ -16,7 +16,7 @@ import {
 import { User, Settings, LogOut, Loader2 } from "lucide-react"
 import { toast } from "sonner"
 import { createClient } from "@/lib/supabase/client"
-import { usePageVisibility } from "@/hooks/use-page-visibility"
+import { usePageVisibility } from "@/shared"
 
 interface UserProfile {
   id: string

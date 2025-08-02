@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import CardTweakInfo from './card-tweak-info';
 import { TweaksPreviewSkeleton } from '@/components/ui/tweak-skeletons';
-import { useFeaturedTweaks, useTweaksCount } from '@/hooks/use-tweaks-cache';
+import { useFeaturedTweaks, useTweaksCount } from '@/tweaks';
 import { transformDatabaseTweaksToContentItems } from '@/lib/transformers/tweak-transformer';
 
 export default function TweaksPreview() {

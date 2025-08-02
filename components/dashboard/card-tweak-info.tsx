@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { formatFileSize, formatSuccessRate } from '@/lib/transformers/tweak-transformer';
 import { formatDownloads } from '@/lib/utils/format-helpers';
-import { useDownloadTweak, useLikeTweak } from '@/hooks/use-tweaks-cache';
+import { useDownloadTweak, useLikeTweak } from '@/tweaks';
 
 interface TweakCardProps {
   id: string;
